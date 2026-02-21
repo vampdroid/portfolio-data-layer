@@ -1,7 +1,7 @@
 let cache = {
 	data: null,
 	timestamp: 0,
-	ttl: 1000 * 60 * 60 * 12 // 12 hours
+	ttl: 1000 * 60 * 60 * 24 // 24 hours
 };
 
 // Create a api for the above code snippet. Take ref from the chat.js file above.
