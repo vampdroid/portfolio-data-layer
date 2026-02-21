@@ -19,34 +19,44 @@ export default async function handler(req, res) {
 		return res.status(405).json({ error: 'Only POST, OPTIONS allowed' });
 	}
 
-	const { prompt } = req.body || "Default prompt";
-	const apiKey = process.env.GEMINI_API_KEY;
-	const systemInstruction = process.env.GEMINI_SYSTEM_INSTRUCTION;
+	const { prompt } = req.body || { prompt: "Default prompt" };
+	const apiKey = process.env.OPENROUTER_API_KEY;
+	const systemInstruction = process.env.SYSTEM_INSTRUCTION || process.env.GEMINI_SYSTEM_INSTRUCTION;
 
-	const geminiRes = await fetch(
-		`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-		{
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(
+	const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+		method: "POST",
+		headers: {
+			"Authorization": `Bearer ${apiKey}`,
+			"HTTP-Referer": origin || "https://yashkukreja.com",
+			"X-Title": "Pantheon Portfolio",
+			"Content-Type": "application/json"
+		},
+		body: JSON.stringify({
+			"model": "google/gemini-2.0-flash-001",
+			"messages": [
+				{ "role": "system", "content": systemInstruction },
+				{ "role": "user", "content": prompt }
+			]
+		})
+	});
+
+	const data = await response.json();
+
+	// If the request was successful, transform the response to keep compatibility with the existing frontend
+	if (response.ok && data.choices && data.choices.length > 0) {
+		const transformedData = {
+			candidates: [
 				{
-					contents: [
-						{ parts: 
-							[{ text: prompt }] 
-						}
-					],
-					systemInstruction: {
+					content: {
 						parts: [
-							{
-							text: systemInstruction,
-							}
+							{ text: data.choices[0].message.content }
 						]
-					},
+					}
 				}
-			),
-		}
-	);
+			]
+		};
+		return res.status(200).json(transformedData);
+	}
 
-	const data = await geminiRes.json();
-	res.status(geminiRes.ok ? 200 : 500).json(data);
+	res.status(response.ok ? 200 : response.status).json(data);
 }
