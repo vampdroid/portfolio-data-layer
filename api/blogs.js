@@ -2,7 +2,7 @@
 let cache = {
 	posts: null,
 	timestamp: 0,
-	ttl: 1000 * 60 * 60 * 24 * 7 // 7 days
+	ttl: 1000 * 60 * 60 * 24 // 1 day
 };
 
 export default async function handler(req, res) {
@@ -58,7 +58,7 @@ export default async function handler(req, res) {
 
 			query = `
 				query GetPosts($first: Int) {
-					posts(first: $first, where: {status: PUBLISH}) {
+					posts(first: $first) {
 						nodes {
 							id
 							title
